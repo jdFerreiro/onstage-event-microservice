@@ -35,7 +35,7 @@ const initialEvent = {
   imageUrl: '',
   posterImage: '',
   type: '',
-  releaseDate: '',
+  releaseDate: '', // dd/mm/yyyy
   statusId: '',
   preSeasonStart: '',
   preSeasonEnd: '',
@@ -57,7 +57,15 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
 
   useEffect(() => {
     if (event) {
-      setForm({ ...initialEvent, ...event });
+      setForm({
+        ...initialEvent,
+        ...event,
+        releaseDate: event.releaseDate ? formatDateToDDMMYYYY(event.releaseDate) : '',
+        preSeasonStart: event.preSeasonStart ? formatDateToDDMMYYYY(event.preSeasonStart) : '',
+        preSeasonEnd: event.preSeasonEnd ? formatDateToDDMMYYYY(event.preSeasonEnd) : '',
+        preSaleStart: event.preSaleStart ? formatDateToDDMMYYYY(event.preSaleStart) : '',
+        preSaleEnd: event.preSaleEnd ? formatDateToDDMMYYYY(event.preSaleEnd) : '',
+      });
     } else {
       setForm(initialEvent);
     }
@@ -179,38 +187,18 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
     <>
       <Dialog open={open} onClose={undefined} maxWidth="md" fullWidth>
         <DialogTitle>{event ? 'Editar Evento' : 'Crear Evento'}</DialogTitle>
-        <DialogContent dividers sx={{
-          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          borderRadius: 3,
-          boxShadow: 4
-        }}>
+        <DialogContent dividers sx={{ background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', borderRadius: 3, boxShadow: 4 }}>
           <Box sx={{ background: 'rgba(255,255,255,0.85)', p: 3 }}>
-            {/* Título */}
-            <TextField label="Título" name="title" value={form.title} onChange={handleChange} fullWidth sx={{ fontWeight: 'bold', bgcolor: '#f7fafd', borderRadius: 2, mb: 0.5 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
-            {errors.title ? (
-              <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.title}</Typography>
-            ) : (
-              <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-            )}
-            {/* Descripción */}
-            <TextField label="Descripción" name="description" value={form.description} onChange={handleChange} fullWidth multiline rows={4} sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 0.5 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
-            {errors.description ? (
-              <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.description}</Typography>
-            ) : (
-              <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-            )}
-            {/* Controles principales y área de imagen */}
-            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column'}}>
-                <FormControl fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 0.5 }}>
+            {/* Título y descripción al 100% */}
+            <TextField label="Título" name="title" value={form.title} onChange={handleChange} fullWidth tabIndex={1} sx={{ fontWeight: 'bold', bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
+            <TextField label="Descripción" name="description" value={form.description} onChange={handleChange} fullWidth multiline rows={4} tabIndex={2} sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 2 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
+            {/* Bloque de dos columnas: controles y área de imagen */}
+            <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
+              {/* Columna izquierda: género, duración, fecha, estatus */}
+              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <FormControl fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}>
                   <InputLabel sx={{ fontWeight: 600 }}>Género</InputLabel>
-                  <Select
-                    name="genreId"
-                    value={form.genreId || ''}
-                    label="Género"
-                    onChange={handleSelectChange}
-                    disabled={loadingGenres}
-                  >
+                  <Select name="genreId" value={form.genreId || ''} label="Género" onChange={handleSelectChange} disabled={loadingGenres} tabIndex={3}>
                     {loadingGenres ? (
                       <MenuItem value=""><CircularProgress size={20} /></MenuItem>
                     ) : genres.length === 0 ? (
@@ -222,35 +210,11 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                     )}
                   </Select>
                 </FormControl>
-                {errors.genreId ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.genreId}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-                )}
-                <TextField label="Duración (min)" name="durationMinutes" value={form.durationMinutes} onChange={handleChange} type="number" fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 0.5 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
-                {errors.durationMinutes ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.durationMinutes}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-                )}
-                <TextField label="Fecha de estreno" name="releaseDate" value={formatDateToDDMMYYYY(form.releaseDate)}
-                  onChange={e => {
-                    const value = e.target.value;
-                    setForm(prev => ({ ...prev, releaseDate: parseDDMMYYYYToISO(value) }));
-                  }}
-                  type="text"
-                  placeholder="dd/mm/yyyy"
-                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
-                  fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 0.5 }}
-                />
-                {errors.releaseDate ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.releaseDate}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-                )}
-                <FormControl fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 0.5 }}>
+                <TextField label="Duración (min)" name="durationMinutes" value={form.durationMinutes} onChange={handleChange} type="number" fullWidth tabIndex={4} sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
+                <TextField label="Fecha de estreno" name="releaseDate" value={form.releaseDate} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={5} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                <FormControl fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}>
                   <InputLabel sx={{ fontWeight: 600 }}>Estatus</InputLabel>
-                  <Select name="statusId" value={form.statusId} label="Estatus" onChange={handleSelectChange} disabled={loadingStatuses}>
+                  <Select name="statusId" value={form.statusId} label="Estatus" onChange={handleSelectChange} disabled={loadingStatuses} tabIndex={6}>
                     {loadingStatuses ? (
                       <MenuItem value=""><CircularProgress size={20} /></MenuItem>
                     ) : statusOptions.length === 0 ? (
@@ -262,13 +226,9 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                     )}
                   </Select>
                 </FormControl>
-                {errors.statusId ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.statusId}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-                )}
               </Box>
-              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', minHeight: 220 }}>
+              {/* Columna derecha: área de imagen y botón */}
+              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 220 }}>
                 <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #90caf9', borderRadius: 3, mb: 1, minHeight: 210, maxHeight: 210, background: '#e3f2fd' }}>
                   {form.imageUrl ? (
                     <img src={form.imageUrl} alt="Imagen" style={{ maxWidth: '100%', maxHeight: '190px', objectFit: 'contain', borderRadius: 8, boxShadow: '0 2px 8px #90caf9' }} />
@@ -276,7 +236,7 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                     <Typography variant="body2" color="textSecondary">Sin imagen</Typography>
                   )}
                 </Box>
-                <Button variant="contained" color="primary" component="label" startIcon={<PhotoCamera />} sx={{ alignSelf: 'flex-end', borderRadius: 2, boxShadow: 2, fontWeight: 600, textTransform: 'none', mt: 0, mb: 1, ':hover': { bgcolor: '#1976d2' } }}>
+                <Button variant="contained" color="primary" component="label" startIcon={<PhotoCamera />} sx={{ alignSelf: 'flex-end', borderRadius: 2, boxShadow: 2, fontWeight: 600, textTransform: 'none', mt: 0, mb: 1, ':hover': { bgcolor: '#1976d2' } }} tabIndex={-1}>
                   Cargar poster
                   <input type="file" accept="image/*" hidden onChange={e => {
                     const file = e.target.files?.[0];
@@ -291,83 +251,38 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                 </Button>
               </Box>
             </Box>
-            {/* Segunda fila de controles en dos columnas */}
-            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column'}}>
-                <TextField label="Precio socios" name="memberPrice" value={form.memberPrice} onChange={handleChange} type="number" fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 0.5 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
-                {errors.memberPrice ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.memberPrice}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-                )}
-                <TextField label="Inicio pre-venta" name="preSaleStart" value={formatDateToDDMMYYYY(form.preSaleStart)}
-                  onChange={e => {
-                    const value = e.target.value;
-                    setForm(prev => ({ ...prev, preSaleStart: parseDDMMYYYYToISO(value) }));
-                  }}
-                  type="text"
-                  placeholder="dd/mm/yyyy"
-                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
-                  fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 2 }}
-                />
-                {errors.preSaleStart ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.preSaleStart}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-                )}
-                <TextField label="Inicio pre-temporada" name="preSeasonStart" value={formatDateToDDMMYYYY(form.preSeasonStart)}
-                  onChange={e => {
-                    const value = e.target.value;
-                    setForm(prev => ({ ...prev, preSeasonStart: parseDDMMYYYYToISO(value) }));
-                  }}
-                  type="text"
-                  placeholder="dd/mm/yyyy"
-                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
-                  fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 2 }}
-                />
-                {errors.preSeasonStart ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.preSeasonStart}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-                )}
+            {/* Bloque inferior de dos columnas para precios y fechas */}
+            <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
+              {/* Columna izquierda: precio socios, inicio pre-venta, inicio pre-temporada */}
+              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <TextField label="Precio socios" name="memberPrice" value={form.memberPrice} onChange={handleChange} type="number" fullWidth tabIndex={7} sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
               </Box>
-              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column' }}>
-                <TextField label="Precio no socios" name="nonMemberPrice" value={form.nonMemberPrice} onChange={handleChange} type="number" fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 0.5 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
-                {errors.nonMemberPrice ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.nonMemberPrice}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-                )}
-                <TextField label="Fin de pre-venta" name="preSaleEnd" value={formatDateToDDMMYYYY(form.preSaleEnd)}
-                  onChange={e => {
-                    const value = e.target.value;
-                    setForm(prev => ({ ...prev, preSaleEnd: parseDDMMYYYYToISO(value) }));
-                  }}
-                  type="text"
-                  placeholder="dd/mm/yyyy"
-                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
-                  fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 2 }}
-                />
+              {/* Columna derecha: precio no socios, fin pre-venta, fin pre-temporada */}
+              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <TextField label="Precio no socios" name="nonMemberPrice" value={form.nonMemberPrice} onChange={handleChange} type="number" fullWidth tabIndex={10} sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
+              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <TextField label="Inicio pre-venta" name="preSaleStart" value={form.preSaleStart} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={8} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+              </Box>
+              {/* Columna derecha: precio no socios, fin pre-venta, fin pre-temporada */}
+              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <TextField label="Fin pre-venta" name="preSaleEnd" value={form.preSaleEnd} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={11} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
                 {errors.preSaleEnd ? (
                   <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.preSaleEnd}</Typography>
                 ) : (
                   <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
                 )}
-                <TextField label="Fin pre-temporada" name="preSeasonEnd" value={formatDateToDDMMYYYY(form.preSeasonEnd)}
-                  onChange={e => {
-                    const value = e.target.value;
-                    setForm(prev => ({ ...prev, preSeasonEnd: parseDDMMYYYYToISO(value) }));
-                  }}
-                  type="text"
-                  placeholder="dd/mm/yyyy"
-                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
-                  fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 2 }}
-                />
-                {errors.preSeasonEnd ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.preSeasonEnd}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
-                )}
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
+              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <TextField label="Inicio pre-temporada" name="preSeasonStart" value={form.preSeasonStart} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={9} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+              </Box>
+              {/* Columna derecha: precio no socios, fin pre-venta, fin pre-temporada */}
+              <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <TextField label="Fin pre-temporada" name="preSeasonEnd" value={form.preSeasonEnd} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={12} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
               </Box>
             </Box>
           </Box>
