@@ -1,0 +1,898 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": { "200": { "description": "" } },
+        "tags": ["App"]
+      }
+    },
+    "/events": {
+      "get": {
+        "operationId": "EventController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de eventos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/EventDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener todos los eventos",
+        "tags": ["Eventos"]
+      },
+      "post": {
+        "operationId": "EventController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EventDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Evento creado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Crear un nuevo evento",
+        "tags": ["Eventos"]
+      }
+    },
+    "/events/{id}": {
+      "get": {
+        "operationId": "EventController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID del evento",
+            "schema": {
+              "example": "b1a2c3d4-e5f6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evento encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener un evento por ID",
+        "tags": ["Eventos"]
+      },
+      "put": {
+        "operationId": "EventController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID del evento",
+            "schema": {
+              "example": "b1a2c3d4-e5f6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EventDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento actualizado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Actualizar un evento existente",
+        "tags": ["Eventos"]
+      },
+      "delete": {
+        "operationId": "EventController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID del evento",
+            "schema": {
+              "example": "b1a2c3d4-e5f6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": { "204": { "description": "Evento eliminado" } },
+        "security": [{ "jwt": [] }],
+        "summary": "Eliminar un evento por ID",
+        "tags": ["Eventos"]
+      }
+    },
+    "/events/statuses/all": {
+      "get": {
+        "operationId": "EventController_getStatuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de estatus",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener todos los estatus de evento",
+        "tags": ["Eventos"]
+      }
+    },
+    "/functions": {
+      "get": {
+        "operationId": "FunctionController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de funciones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FunctionDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener todas las funciones",
+        "tags": ["Funciones"]
+      },
+      "post": {
+        "operationId": "FunctionController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FunctionDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Función creada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FunctionDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Crear una nueva función",
+        "tags": ["Funciones"]
+      }
+    },
+    "/functions/venue/{venueId}": {
+      "get": {
+        "operationId": "FunctionController_findByVenue",
+        "parameters": [
+          {
+            "name": "venueId",
+            "required": true,
+            "in": "path",
+            "description": "ID de la sala (venue)",
+            "schema": {
+              "example": "v1a2b3c4-d5e6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de funciones para la sala",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FunctionDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener funciones por sala (venue)",
+        "tags": ["Funciones"]
+      }
+    },
+    "/functions/{id}": {
+      "get": {
+        "operationId": "FunctionController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID de la función",
+            "schema": {
+              "example": "f1a2b3c4-d5e6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Función encontrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FunctionDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener una función por ID",
+        "tags": ["Funciones"]
+      },
+      "put": {
+        "operationId": "FunctionController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID de la función",
+            "schema": {
+              "example": "f1a2b3c4-d5e6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FunctionDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Función actualizada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FunctionDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Actualizar una función existente",
+        "tags": ["Funciones"]
+      },
+      "delete": {
+        "operationId": "FunctionController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID de la función",
+            "schema": {
+              "example": "f1a2b3c4-d5e6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": { "204": { "description": "Función eliminada" } },
+        "security": [{ "jwt": [] }],
+        "summary": "Eliminar una función por ID",
+        "tags": ["Funciones"]
+      }
+    },
+    "/functions/statuses/all": {
+      "get": {
+        "operationId": "FunctionController_getStatuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de estatus",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener todos los estatus de función",
+        "tags": ["Funciones"]
+      }
+    },
+    "/reservations": {
+      "get": {
+        "operationId": "ReservationController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de reservaciones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ReservationDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener todas las reservaciones",
+        "tags": ["Reservaciones"]
+      },
+      "post": {
+        "operationId": "ReservationController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReservationDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reservación creada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReservationDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Crear una nueva reservación",
+        "tags": ["Reservaciones"]
+      }
+    },
+    "/reservations/{id}": {
+      "get": {
+        "operationId": "ReservationController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID de la reservación",
+            "schema": {
+              "example": "r1a2b3c4-d5e6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservación encontrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReservationDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener una reservación por ID",
+        "tags": ["Reservaciones"]
+      },
+      "put": {
+        "operationId": "ReservationController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID de la reservación",
+            "schema": {
+              "example": "r1a2b3c4-d5e6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReservationDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reservación actualizada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReservationDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Actualizar una reservación existente",
+        "tags": ["Reservaciones"]
+      },
+      "delete": {
+        "operationId": "ReservationController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID de la reservación",
+            "schema": {
+              "example": "r1a2b3c4-d5e6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": { "204": { "description": "Reservación eliminada" } },
+        "security": [{ "jwt": [] }],
+        "summary": "Eliminar una reservación por ID",
+        "tags": ["Reservaciones"]
+      }
+    },
+    "/reservations/statuses/all": {
+      "get": {
+        "operationId": "ReservationController_getStatuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de estatus",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener todos los estatus de reservación",
+        "tags": ["Reservaciones"]
+      }
+    },
+    "/seat-availability": {
+      "get": {
+        "operationId": "SeatAvailabilityController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de disponibilidades",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeatAvailabilityDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener todas las disponibilidades de butacas",
+        "tags": ["Disponibilidad de Butacas"]
+      },
+      "post": {
+        "operationId": "SeatAvailabilityController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SeatAvailabilityDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Disponibilidad creada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SeatAvailabilityDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Crear una nueva disponibilidad de butaca",
+        "tags": ["Disponibilidad de Butacas"]
+      }
+    },
+    "/seat-availability/{id}": {
+      "get": {
+        "operationId": "SeatAvailabilityController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID de la disponibilidad",
+            "schema": {
+              "example": "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Disponibilidad encontrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SeatAvailabilityDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener una disponibilidad de butaca por ID",
+        "tags": ["Disponibilidad de Butacas"]
+      },
+      "put": {
+        "operationId": "SeatAvailabilityController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID de la disponibilidad",
+            "schema": {
+              "example": "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SeatAvailabilityDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Disponibilidad actualizada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SeatAvailabilityDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Actualizar una disponibilidad de butaca existente",
+        "tags": ["Disponibilidad de Butacas"]
+      },
+      "delete": {
+        "operationId": "SeatAvailabilityController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID de la disponibilidad",
+            "schema": {
+              "example": "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": { "204": { "description": "Disponibilidad eliminada" } },
+        "security": [{ "jwt": [] }],
+        "summary": "Eliminar una disponibilidad de butaca por ID",
+        "tags": ["Disponibilidad de Butacas"]
+      }
+    },
+    "/seat-availability/statuses/all": {
+      "get": {
+        "operationId": "SeatAvailabilityController_getStatuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de estatus",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        },
+        "security": [{ "jwt": [] }],
+        "summary": "Obtener todos los estatus de disponibilidad de butaca",
+        "tags": ["Disponibilidad de Butacas"]
+      }
+    }
+  },
+  "info": {
+    "title": "Events Service API",
+    "description": "API documentation for Event Service",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "jwt": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "JWT",
+        "description": "Enter JWT token",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "EventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "b1a2c3d4-e5f6-7890-abcd-1234567890ab",
+            "description": "ID único del evento (UUID)"
+          },
+          "title": {
+            "type": "string",
+            "example": "El Rey León",
+            "description": "Título del evento (obra, película, etc.)"
+          },
+          "description": {
+            "type": "string",
+            "example": "Musical de Broadway",
+            "description": "Descripción del evento"
+          },
+          "genre": {
+            "type": "string",
+            "example": "Musical",
+            "description": "Género del evento"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "example": 120,
+            "description": "Duración en minutos"
+          },
+          "imageUrl": {
+            "type": "string",
+            "example": "https://ejemplo.com/poster.jpg",
+            "description": "URL de la imagen del evento"
+          },
+          "posterImage": {
+            "type": "string",
+            "example": "iVBORw0KGgoAAAANSUhEUgAA...",
+            "description": "Imagen del póster en formato base64"
+          },
+          "type": {
+            "type": "string",
+            "example": "Obra",
+            "description": "Tipo de evento (Obra, Película, Concierto, etc.)"
+          },
+          "releaseDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-10-01",
+            "description": "Fecha de estreno"
+          },
+          "statusId": {
+            "type": "number",
+            "example": 2,
+            "description": "ID del estatus del evento"
+          },
+          "preSeasonStart": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-09-01T00:00:00Z",
+            "description": "Inicio de pre-temporada"
+          },
+          "preSeasonEnd": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-09-15T00:00:00Z",
+            "description": "Fin de pre-temporada"
+          },
+          "preSaleStart": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-09-16T00:00:00Z",
+            "description": "Inicio de pre-venta"
+          },
+          "preSaleEnd": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-09-30T00:00:00Z",
+            "description": "Fin de pre-venta"
+          }
+        },
+        "required": ["title"]
+      },
+      "FunctionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "f1a2b3c4-d5e6-7890-abcd-1234567890ab",
+            "description": "ID único de la función (UUID)"
+          },
+          "eventId": {
+            "type": "string",
+            "example": "b1a2c3d4-e5f6-7890-abcd-1234567890ab",
+            "description": "ID del evento asociado"
+          },
+          "venueId": {
+            "type": "string",
+            "example": "v1a2b3c4-d5e6-7890-abcd-1234567890ab",
+            "description": "ID de la sala (venue)"
+          },
+          "startTime": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-10-01T20:00:00Z",
+            "description": "Fecha y hora de inicio de la función"
+          },
+          "endTime": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-10-01T22:00:00Z",
+            "description": "Fecha y hora de fin de la función"
+          },
+          "language": {
+            "type": "string",
+            "example": "Español",
+            "description": "Idioma de la función"
+          },
+          "format": {
+            "type": "string",
+            "example": "3D",
+            "description": "Formato de la función (2D, 3D, subtitulada, etc.)"
+          },
+          "statusId": {
+            "type": "number",
+            "example": 2,
+            "description": "ID del estatus de la función"
+          },
+          "preSaleStart": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-09-16T00:00:00Z",
+            "description": "Inicio de pre-venta para la función"
+          },
+          "preSaleEnd": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-09-30T00:00:00Z",
+            "description": "Fin de pre-venta para la función"
+          }
+        },
+        "required": ["eventId", "venueId", "startTime", "endTime"]
+      },
+      "ReservationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "r1a2b3c4-d5e6-7890-abcd-1234567890ab",
+            "description": "ID único de la reservación (UUID)"
+          },
+          "functionId": {
+            "type": "string",
+            "example": "f1a2b3c4-d5e6-7890-abcd-1234567890ab",
+            "description": "ID de la función reservada"
+          },
+          "seatId": {
+            "type": "string",
+            "example": "s1a2b3c4-d5e6-7890-abcd-1234567890ab",
+            "description": "ID de la butaca reservada"
+          },
+          "venueId": {
+            "type": "string",
+            "example": "v1a2b3c4-d5e6-7890-abcd-1234567890ab",
+            "description": "ID de la sala (venue)"
+          },
+          "userId": {
+            "type": "string",
+            "example": "u1a2b3c4-d5e6-7890-abcd-1234567890ab",
+            "description": "ID del usuario que reserva"
+          },
+          "reservedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-09-29T12:00:00Z",
+            "description": "Fecha y hora de la reservación"
+          },
+          "isPaid": {
+            "type": "boolean",
+            "example": true,
+            "description": "Indica si la reservación está pagada"
+          },
+          "statusId": {
+            "type": "number",
+            "example": 2,
+            "description": "ID del estatus de la reservación"
+          }
+        },
+        "required": ["functionId", "seatId", "venueId", "userId"]
+      },
+      "SeatAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+            "description": "ID único de la disponibilidad de butaca (UUID)"
+          },
+          "seatId": {
+            "type": "string",
+            "example": "s1a2b3c4-d5e6-7890-abcd-1234567890ab",
+            "description": "ID de la butaca (seat)"
+          },
+          "eventId": {
+            "type": "string",
+            "example": "b1a2c3d4-e5f6-7890-abcd-1234567890ab",
+            "description": "ID del evento (opcional)"
+          },
+          "functionId": {
+            "type": "string",
+            "example": "f1a2b3c4-d5e6-7890-abcd-1234567890ab",
+            "description": "ID de la función (opcional)"
+          },
+          "statusId": {
+            "type": "number",
+            "example": 2,
+            "description": "ID del estatus de la butaca (1: disponible, 2: bloqueada, etc.)"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Butaca bloqueada por mantenimiento",
+            "description": "Motivo de la restricción o bloqueo"
+          }
+        },
+        "required": ["seatId", "statusId"]
+      }
+    }
+  }
+}
