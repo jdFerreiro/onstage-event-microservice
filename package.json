@@ -27,8 +27,12 @@
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
     "@mui/x-data-grid": "^8.12.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-input-mask": "^2.0.4",
     "react-router-dom": "^7.9.3",
-    "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.1",
+    "react-text-mask": "^5.5.0"
   },
   "browserslist": {
     "production": [

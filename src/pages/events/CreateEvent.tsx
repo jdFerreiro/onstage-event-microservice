@@ -17,6 +17,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContentText from '@mui/material/DialogContentText';
 import CircularProgress from '@mui/material/CircularProgress';
+import MaskedInput from 'react-text-mask';
 
 interface CreateEventProps {
     open: boolean;
@@ -292,7 +293,25 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                 {errors.durationMinutes && (
                   <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.durationMinutes}</Typography>
                 )}
-                <TextField label="Fecha de estreno" name="releaseDate" value={form.releaseDate} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={5} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                <TextField
+                  label="Fecha de estreno"
+                  name="releaseDate"
+                  value={form.releaseDate}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="dd/mm/yyyy"
+                  tabIndex={5}
+                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
+                  fullWidth
+                  sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}
+                  InputProps={{
+                    inputComponent: MaskedInput,
+                    inputProps: {
+                      mask: [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/],
+                      guide: false,
+                    },
+                  }}
+                />
                 {errors.releaseDate && (
                   <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.releaseDate}</Typography>
                 )}
