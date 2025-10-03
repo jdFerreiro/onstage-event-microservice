@@ -18,24 +18,22 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContentText from '@mui/material/DialogContentText';
 import CircularProgress from '@mui/material/CircularProgress';
 
-
-  interface CreateEventProps {
+interface CreateEventProps {
     open: boolean;
     onClose: () => void;
     onSave: (data: any) => void;
     event?: any;
     clubId: string;
-  }
+}
 
 const initialEvent = {
   title: '',
   description: '',
-  genreId: '', // Cambiado de 'genre' a 'genreId'
+  genreId: '',
   durationMinutes: '',
   imageUrl: '',
-  posterImage: '',
-  type: '',
-  releaseDate: '', // dd/mm/yyyy
+  posterImage: '', // base64
+  releaseDate: '',
   statusId: '',
   preSeasonStart: '',
   preSeasonEnd: '',
@@ -43,6 +41,7 @@ const initialEvent = {
   preSaleEnd: '',
   memberPrice: '',
   nonMemberPrice: '',
+  // type eliminado
 };
 
 const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event, clubId }) => {
@@ -156,12 +155,82 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
   if (!form.statusId) newErrors.statusId = 'El estatus es obligatorio';
   if (!form.memberPrice) newErrors.memberPrice = 'El precio de socios es obligatorio';
   if (!form.nonMemberPrice) newErrors.nonMemberPrice = 'El precio de no socios es obligatorio';
-  if (!form.preSaleStart) newErrors.preSaleStart = 'La fecha de inicio de pre-venta es obligatoria';
-    // Eliminada validación de fecha de presentación
+  // Validación de fechas dd/mm/yyyy
+  const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+  if (form.preSaleStart && !dateRegex.test(form.preSaleStart)) newErrors.preSaleStart = 'Formato dd/mm/yyyy';
+  if (form.preSaleEnd && !dateRegex.test(form.preSaleEnd)) newErrors.preSaleEnd = 'Formato dd/mm/yyyy';
+  if (form.preSeasonStart && !dateRegex.test(form.preSeasonStart)) newErrors.preSeasonStart = 'Formato dd/mm/yyyy';
+  if (form.preSeasonEnd && !dateRegex.test(form.preSeasonEnd)) newErrors.preSeasonEnd = 'Formato dd/mm/yyyy';
+
+  // Validación de rango de fechas pre-venta
+  if (form.preSaleStart && form.preSaleEnd && dateRegex.test(form.preSaleStart) && dateRegex.test(form.preSaleEnd)) {
+    const [d1, m1, y1] = form.preSaleStart.split('/');
+    const [d2, m2, y2] = form.preSaleEnd.split('/');
+    const start = new Date(`${y1}-${m1}-${d1}`);
+    const end = new Date(`${y2}-${m2}-${d2}`);
+    if (end <= start) {
+      newErrors.preSaleEnd = 'Fin de pre-venta debe ser posterior al inicio';
+    }
+  }
+  // Validación de rango de fechas pre-temporada
+  if (form.preSeasonStart && form.preSeasonEnd && dateRegex.test(form.preSeasonStart) && dateRegex.test(form.preSeasonEnd)) {
+    const [d1, m1, y1] = form.preSeasonStart.split('/');
+    const [d2, m2, y2] = form.preSeasonEnd.split('/');
+    const start = new Date(`${y1}-${m1}-${d1}`);
+    const end = new Date(`${y2}-${m2}-${d2}`);
+    if (end <= start) {
+      newErrors.preSeasonEnd = 'Fin de pre-temporada debe ser posterior al inicio';
+    }
+  }
+
   setErrors(newErrors);
   if (Object.keys(newErrors).length > 0) return;
   setSaving(true);
-  await onSave({ ...form, clubId });
+  // Prepara el objeto para enviar al backend, ajustando tipos
+  const eventToSend = {
+    ...form,
+    clubId,
+    releaseDate: form.releaseDate && /^\d{2}\/\d{2}\/\d{4}$/.test(form.releaseDate)
+      ? parseDDMMYYYYToISO(form.releaseDate)
+      : undefined,
+    preSaleStart: form.preSaleStart && /^\d{2}\/\d{2}\/\d{4}$/.test(form.preSaleStart)
+      ? parseDDMMYYYYToISO(form.preSaleStart)
+      : undefined,
+    preSaleEnd: form.preSaleEnd && /^\d{2}\/\d{2}\/\d{4}$/.test(form.preSaleEnd)
+      ? parseDDMMYYYYToISO(form.preSaleEnd)
+      : undefined,
+    preSeasonStart: form.preSeasonStart && /^\d{2}\/\d{2}\/\d{4}$/.test(form.preSeasonStart)
+      ? parseDDMMYYYYToISO(form.preSeasonStart)
+      : undefined,
+    preSeasonEnd: form.preSeasonEnd && /^\d{2}\/\d{2}\/\d{4}$/.test(form.preSeasonEnd)
+      ? parseDDMMYYYYToISO(form.preSeasonEnd)
+      : undefined,
+    durationMinutes: form.durationMinutes !== '' && !isNaN(Number(form.durationMinutes))
+      ? Number(form.durationMinutes)
+      : undefined,
+    memberPrice: form.memberPrice !== '' && !isNaN(Number(form.memberPrice))
+      ? Number(form.memberPrice)
+      : undefined,
+    nonMemberPrice: form.nonMemberPrice !== '' && !isNaN(Number(form.nonMemberPrice))
+      ? Number(form.nonMemberPrice)
+      : undefined,
+    statusId: form.statusId !== '' && !isNaN(Number(form.statusId))
+      ? Number(form.statusId)
+      : undefined,
+    genreId: form.genreId,
+    // type eliminado
+  };
+  // Construye un nuevo objeto limpio sin campos vacíos, undefined o NaN
+  const cleanEvent = Object.fromEntries(
+    Object.entries(eventToSend).filter(([key, v]) => v !== '' && v !== undefined && v !== null && !(typeof v === 'number' && isNaN(v)))
+  );
+  // Log para depuración (evita circular structure)
+  try {
+    console.log('Evento enviado al backend:', JSON.stringify(cleanEvent, null, 2));
+  } catch (e) {
+    console.log('Evento enviado al backend (objeto):', cleanEvent);
+  }
+  await onSave(cleanEvent);
   setSaving(false);
   };
 
@@ -191,7 +260,13 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
           <Box sx={{ background: 'rgba(255,255,255,0.85)', p: 3 }}>
             {/* Título y descripción al 100% */}
             <TextField label="Título" name="title" value={form.title} onChange={handleChange} fullWidth tabIndex={1} sx={{ fontWeight: 'bold', bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
+            {errors.title && (
+              <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.title}</Typography>
+            )}
             <TextField label="Descripción" name="description" value={form.description} onChange={handleChange} fullWidth multiline rows={4} tabIndex={2} sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 2 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
+            {errors.description && (
+              <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.description}</Typography>
+            )}
             {/* Bloque de dos columnas: controles y área de imagen */}
             <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
               {/* Columna izquierda: género, duración, fecha, estatus */}
@@ -209,9 +284,18 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                       ))
                     )}
                   </Select>
+                  {errors.genreId && (
+                    <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.genreId}</Typography>
+                  )}
                 </FormControl>
                 <TextField label="Duración (min)" name="durationMinutes" value={form.durationMinutes} onChange={handleChange} type="number" fullWidth tabIndex={4} sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
+                {errors.durationMinutes && (
+                  <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.durationMinutes}</Typography>
+                )}
                 <TextField label="Fecha de estreno" name="releaseDate" value={form.releaseDate} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={5} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                {errors.releaseDate && (
+                  <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.releaseDate}</Typography>
+                )}
                 <FormControl fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}>
                   <InputLabel sx={{ fontWeight: 600 }}>Estatus</InputLabel>
                   <Select name="statusId" value={form.statusId} label="Estatus" onChange={handleSelectChange} disabled={loadingStatuses} tabIndex={6}>
@@ -225,6 +309,9 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                       ))
                     )}
                   </Select>
+                  {errors.statusId && (
+                    <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.statusId}</Typography>
+                  )}
                 </FormControl>
               </Box>
               {/* Columna derecha: área de imagen y botón */}
@@ -243,7 +330,12 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                     if (file) {
                       const reader = new FileReader();
                       reader.onload = ev => {
-                        setForm(prev => ({ ...prev, imageUrl: ev.target?.result as string }));
+                        const result = ev.target?.result as string;
+                        setForm(prev => ({
+                          ...prev,
+                          imageUrl: result,
+                          posterImage: result?.split(',')[1] || '', // base64 sin encabezado
+                        }));
                       };
                       reader.readAsDataURL(file);
                     }
@@ -256,33 +348,46 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
               {/* Columna izquierda: precio socios, inicio pre-venta, inicio pre-temporada */}
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <TextField label="Precio socios" name="memberPrice" value={form.memberPrice} onChange={handleChange} type="number" fullWidth tabIndex={7} sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
+                {errors.memberPrice && (
+                  <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.memberPrice}</Typography>
+                )}
               </Box>
               {/* Columna derecha: precio no socios, fin pre-venta, fin pre-temporada */}
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <TextField label="Precio no socios" name="nonMemberPrice" value={form.nonMemberPrice} onChange={handleChange} type="number" fullWidth tabIndex={10} sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} InputLabelProps={{ style: { fontWeight: 600 } }} />
+                {errors.nonMemberPrice && (
+                  <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.nonMemberPrice}</Typography>
+                )}
               </Box>
             </Box>
             <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <TextField label="Inicio pre-venta" name="preSaleStart" value={form.preSaleStart} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={8} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                {errors.preSaleStart && (
+                  <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.preSaleStart}</Typography>
+                )}
               </Box>
               {/* Columna derecha: precio no socios, fin pre-venta, fin pre-temporada */}
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <TextField label="Fin pre-venta" name="preSaleEnd" value={form.preSaleEnd} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={11} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
-                {errors.preSaleEnd ? (
-                  <Typography color="error" variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block' }}>{errors.preSaleEnd}</Typography>
-                ) : (
-                  <Typography variant="caption" sx={{ mb: 2, minHeight: 20, display: 'block', visibility: 'hidden' }}>.</Typography>
+                {errors.preSaleEnd && (
+                  <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.preSaleEnd}</Typography>
                 )}
               </Box>
             </Box>
             <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <TextField label="Inicio pre-temporada" name="preSeasonStart" value={form.preSeasonStart} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={9} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                {errors.preSeasonStart && (
+                  <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.preSeasonStart}</Typography>
+                )}
               </Box>
               {/* Columna derecha: precio no socios, fin pre-venta, fin pre-temporada */}
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <TextField label="Fin pre-temporada" name="preSeasonEnd" value={form.preSeasonEnd} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={12} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                {errors.preSeasonEnd && (
+                  <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.preSeasonEnd}</Typography>
+                )}
               </Box>
             </Box>
           </Box>

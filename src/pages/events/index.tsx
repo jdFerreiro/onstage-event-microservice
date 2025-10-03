@@ -23,11 +23,20 @@ import { fetchEvents, createEvent, updateEvent, deleteEvent, fetchGenres } from 
 
 const columns: GridColDef[] = [
   { field: 'title', headerName: 'Título', flex: 1 },
-  { field: 'description', headerName: 'Descripción', flex: 1 },
-  { field: 'genre', headerName: 'Género', flex: 1 },
-  { field: 'durationMinutes', headerName: 'Duración (min)', flex: 0.5 },
-  { field: 'type', headerName: 'Tipo', flex: 0.5 },
+  {
+    field: 'genreName',
+    headerName: 'Género',
+    flex: 1,
+  },
+  { field: 'durationMinutes', headerName: 'Tiempo (min)', flex: 0.5 },
   { field: 'releaseDate', headerName: 'Estreno', flex: 0.7 },
+  { field: 'memberPrice', headerName: 'Precio socio', flex: 0.5 },
+  { field: 'nonMemberPrice', headerName: 'Precio no socio', flex: 0.5 },
+  {
+    field: 'statusName',
+    headerName: 'Estado',
+    flex: 1,
+  },
   {
     field: 'actions',
     headerName: 'Acciones',
@@ -151,6 +160,8 @@ const EventsPage: React.FC = () => {
         <DataGrid
           rows={events.map(event => ({
             ...event,
+            genreName: event.genre?.name ?? 'No definido',
+            statusName: event.status?.name ?? 'No definido',
             actions: (
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Tooltip title="Editar evento">
@@ -193,25 +204,6 @@ const EventsPage: React.FC = () => {
         </DialogActions>
       </Dialog>
       </Box>
-      <CreateEvent
-        open={openModal}
-        onClose={handleModalClose}
-        onSave={handleSave}
-        event={editEvent}
-        clubId={selectedClub}
-      />
-      <Dialog open={confirmDeleteOpen} onClose={() => setConfirmDeleteOpen(false)}>
-        <DialogTitle>Confirmar eliminación</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            ¿Está seguro que desea eliminar el evento "{deleteEvent?.title}"?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDeleteOpen(false)} color="primary">Cancelar</Button>
-          <Button onClick={confirmDelete} color="error">Eliminar</Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

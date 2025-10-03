@@ -10,10 +10,12 @@ function getAuthHeaders() {
 
 // EVENTOS
 export async function fetchEvents() {
-  return fetch(`${API_BASE}/events`, {
+  const data = await fetch(`${API_BASE}/events`, {
     headers: getAuthHeaders()
   }).then(res => res.json());
-}
+  console.log(data);
+  return data;
+} 
 
 export async function createEvent(eventDto) {
   return fetch(`${API_BASE}/events`, {
