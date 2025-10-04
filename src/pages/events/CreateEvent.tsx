@@ -17,7 +17,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContentText from '@mui/material/DialogContentText';
 import CircularProgress from '@mui/material/CircularProgress';
-import MaskedInput from 'react-text-mask';
+import InputMask from 'react-input-mask';
 
 interface CreateEventProps {
     open: boolean;
@@ -106,10 +106,45 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
       });
   }, [event, open]);
 
+  useEffect(() => {
+    if (genres.length > 0 && !genres.some(g => g.id === form.genreId)) {
+      setForm(prev => ({ ...prev, genreId: '' }));
+    }
+    if (statusOptions.length > 0 && !statusOptions.some(s => s.id === form.statusId)) {
+      setForm(prev => ({ ...prev, statusId: '' }));
+    }
+  }, [genres, statusOptions]);
+
+  // Convierte dd/mm/yyyy a ISO para el value del input tipo date
+  function ddmmToISO(str: string) {
+    console.log(str);
+  // Espera formato dd/mm/yyyy
+  const [day, month, year] = str.split('/');
+  if (!day || !month || !year) return '';
+  // Crea la fecha como local, no UTC
+  console.log({day, month, year});
+  const date = new Date(Number(year), Number(month), Number(day));
+  // Devuelve solo la parte de fecha, sin hora ni zona
+  return date.toISOString().slice(0, 10);
+}
+
+  // Convierte ISO a dd/mm/yyyy para guardar en el estado
+  function isoToDDMMYYYY(iso: string) {
+    if (!iso) return '';
+    const [year, month, day] = iso.split('-');
+    if (!year || !month || !day) return '';
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+  }
+
+  // Modifica el handleChange para campos de fecha
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    // Limpiar error del campo si se corrige
+    const { name, value, type } = e.target;
+    // Si es campo de fecha, convierte a dd/mm/yyyy
+    if (type === 'date') {
+      setForm(prev => ({ ...prev, [name]: isoToDDMMYYYY(value) }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
     setErrors((prev: any) => {
       const newErrors = { ...prev };
       if (value && newErrors[name]) {
@@ -146,8 +181,25 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
   };
 
   const handleSave = async () => {
-  // Validación simple
   const newErrors: any = {};
+
+  if (form.releaseDate && !isValidDDMMYYYY(form.releaseDate)) {
+    newErrors.releaseDate = 'Fecha inválida';
+  }
+  if (form.preSaleStart && !isValidDDMMYYYY(form.preSaleStart)) {
+    newErrors.preSaleStart = 'Fecha inválida';
+  }
+  if (form.preSaleEnd && !isValidDDMMYYYY(form.preSaleEnd)) {
+    newErrors.preSaleEnd = 'Fecha inválida';
+  }
+  if (form.preSeasonStart && !isValidDDMMYYYY(form.preSeasonStart)) {
+    newErrors.preSeasonStart = 'Fecha inválida';
+  }
+  if (form.preSeasonEnd && !isValidDDMMYYYY(form.preSeasonEnd)) {
+    newErrors.preSeasonEnd = 'Fecha inválida';
+  }
+
+  // Validación simple
   if (!form.title) newErrors.title = 'El título es obligatorio';
   if (!form.description) newErrors.description = 'La descripción es obligatoria';
   if (!form.genreId) newErrors.genreId = 'El género es obligatorio';
@@ -225,12 +277,6 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
   const cleanEvent = Object.fromEntries(
     Object.entries(eventToSend).filter(([key, v]) => v !== '' && v !== undefined && v !== null && !(typeof v === 'number' && isNaN(v)))
   );
-  // Log para depuración (evita circular structure)
-  try {
-    console.log('Evento enviado al backend:', JSON.stringify(cleanEvent, null, 2));
-  } catch (e) {
-    console.log('Evento enviado al backend (objeto):', cleanEvent);
-  }
   await onSave(cleanEvent);
   setSaving(false);
   };
@@ -251,6 +297,20 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
     const [day, month, year] = str.split('/');
     if (!day || !month || !year) return str;
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+
+  function isValidDDMMYYYY(dateStr: string) {
+    const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    const match = dateStr.match(regex);
+    if (!match) return false;
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    const daysInMonth = new Date(year, month, 0).getDate();
+    if (day > daysInMonth) return false;
+    return true;
   }
 
   return (
@@ -274,16 +334,17 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <FormControl fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}>
                   <InputLabel sx={{ fontWeight: 600 }}>Género</InputLabel>
-                  <Select name="genreId" value={form.genreId || ''} label="Género" onChange={handleSelectChange} disabled={loadingGenres} tabIndex={3}>
-                    {loadingGenres ? (
-                      <MenuItem value=""><CircularProgress size={20} /></MenuItem>
-                    ) : genres.length === 0 ? (
-                      <MenuItem value="">Sin géneros</MenuItem>
-                    ) : (
-                      genres.map((g: any) => (
-                        <MenuItem key={g.id} value={g.id}>{g.name || g.nombre}</MenuItem>
-                      ))
-                    )}
+                  <Select
+                    label="Género"
+                    name="genreId"
+                    value={genres.length > 0 ? form.genreId : ''}
+                    onChange={handleSelectChange}
+                    fullWidth
+                    error={!!errors.genreId}
+                  >
+                    {genres.map((g) => (
+                      <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>
+                    ))}
                   </Select>
                   {errors.genreId && (
                     <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.genreId}</Typography>
@@ -293,6 +354,7 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                 {errors.durationMinutes && (
                   <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.durationMinutes}</Typography>
                 )}
+                {/* Fecha de estreno */}
                 <TextField
                   label="Fecha de estreno"
                   name="releaseDate"
@@ -300,33 +362,25 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
                   onChange={handleChange}
                   type="text"
                   placeholder="dd/mm/yyyy"
-                  tabIndex={5}
                   InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
                   fullWidth
                   sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}
-                  InputProps={{
-                    inputComponent: MaskedInput,
-                    inputProps: {
-                      mask: [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/],
-                      guide: false,
-                    },
-                  }}
+                  error={!!errors.releaseDate}
+                  helperText={errors.releaseDate}
                 />
-                {errors.releaseDate && (
-                  <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.releaseDate}</Typography>
-                )}
                 <FormControl fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}>
                   <InputLabel sx={{ fontWeight: 600 }}>Estatus</InputLabel>
-                  <Select name="statusId" value={form.statusId} label="Estatus" onChange={handleSelectChange} disabled={loadingStatuses} tabIndex={6}>
-                    {loadingStatuses ? (
-                      <MenuItem value=""><CircularProgress size={20} /></MenuItem>
-                    ) : statusOptions.length === 0 ? (
-                      <MenuItem value="">Sin estados</MenuItem>
-                    ) : (
-                      statusOptions.map((status: any) => (
-                        <MenuItem key={status.id} value={status.id}>{status.name || status.nombre}</MenuItem>
-                      ))
-                    )}
+                  <Select
+                    label="Estatus"
+                    name="statusId"
+                    value={statusOptions.length > 0 ? form.statusId : ''}
+                    onChange={handleSelectChange}
+                    fullWidth
+                    error={!!errors.statusId}
+                  >
+                    {statusOptions.map((s) => (
+                      <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                    ))}
                   </Select>
                   {errors.statusId && (
                     <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.statusId}</Typography>
@@ -381,14 +435,40 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
             </Box>
             <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <TextField label="Inicio pre-venta" name="preSaleStart" value={form.preSaleStart} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={8} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                {/* Inicio pre-venta */}
+                <TextField
+                  label="Inicio pre-venta"
+                  name="preSaleStart"
+                  value={form.preSaleStart}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="dd/mm/yyyy"
+                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
+                  fullWidth
+                  sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}
+                  error={!!errors.preSaleStart}
+                  helperText={errors.preSaleStart}
+                />
                 {errors.preSaleStart && (
                   <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.preSaleStart}</Typography>
                 )}
               </Box>
               {/* Columna derecha: precio no socios, fin pre-venta, fin pre-temporada */}
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <TextField label="Fin pre-venta" name="preSaleEnd" value={form.preSaleEnd} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={11} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                {/* Fin pre-venta */}
+                <TextField
+                  label="Fin pre-venta"
+                  name="preSaleEnd"
+                  value={form.preSaleEnd}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="dd/mm/yyyy"
+                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
+                  fullWidth
+                  sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}
+                  error={!!errors.preSaleEnd}
+                  helperText={errors.preSaleEnd}
+                />
                 {errors.preSaleEnd && (
                   <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.preSaleEnd}</Typography>
                 )}
@@ -396,14 +476,40 @@ const CreateEvent: React.FC<CreateEventProps> = ({ open, onClose, onSave, event,
             </Box>
             <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <TextField label="Inicio pre-temporada" name="preSeasonStart" value={form.preSeasonStart} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={9} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                {/* Inicio pre-temporada */}
+                <TextField
+                  label="Inicio pre-temporada"
+                  name="preSeasonStart"
+                  value={form.preSeasonStart}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="dd/mm/yyyy"
+                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
+                  fullWidth
+                  sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}
+                  error={!!errors.preSeasonStart}
+                  helperText={errors.preSeasonStart}
+                />
                 {errors.preSeasonStart && (
                   <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.preSeasonStart}</Typography>
                 )}
               </Box>
               {/* Columna derecha: precio no socios, fin pre-venta, fin pre-temporada */}
               <Box sx={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <TextField label="Fin pre-temporada" name="preSeasonEnd" value={form.preSeasonEnd} onChange={handleChange} type="text" placeholder="dd/mm/yyyy" tabIndex={12} InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }} fullWidth sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }} />
+                {/* Fin pre-temporada */}
+                <TextField
+                  label="Fin pre-temporada"
+                  name="preSeasonEnd"
+                  value={form.preSeasonEnd}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="dd/mm/yyyy"
+                  InputLabelProps={{ shrink: true, style: { fontWeight: 600 } }}
+                  fullWidth
+                  sx={{ bgcolor: '#f7fafd', borderRadius: 2, mb: 1 }}
+                  error={!!errors.preSeasonEnd}
+                  helperText={errors.preSeasonEnd}
+                />
                 {errors.preSeasonEnd && (
                   <Typography color="error" variant="caption" sx={{ mb: 1, minHeight: 20, display: 'block' }}>{errors.preSeasonEnd}</Typography>
                 )}

@@ -13,7 +13,6 @@ export async function fetchEvents() {
   const data = await fetch(`${API_BASE}/events`, {
     headers: getAuthHeaders()
   }).then(res => res.json());
-  console.log(data);
   return data;
 } 
 

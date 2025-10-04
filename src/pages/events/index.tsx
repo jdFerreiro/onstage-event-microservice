@@ -21,6 +21,14 @@ import CreateEvent from './CreateEvent.tsx';
 import { fetchClubs } from '../../services/clubs';
 import { fetchEvents, createEvent, updateEvent, deleteEvent, fetchGenres } from '../../services/api';
 
+const formatDate = (iso: string) => {
+  if (!iso) return '';
+  // iso = "2025-11-16"
+  const [year, month, day] = iso.split('-');
+  if (!year || !month || !day) return iso;
+  return `${day}/${month}/${year}`;
+};
+
 const columns: GridColDef[] = [
   { field: 'title', headerName: 'Título', flex: 1 },
   {
@@ -29,7 +37,11 @@ const columns: GridColDef[] = [
     flex: 1,
   },
   { field: 'durationMinutes', headerName: 'Tiempo (min)', flex: 0.5 },
-  { field: 'releaseDate', headerName: 'Estreno', flex: 0.7 },
+  {
+    field: 'firstDate',
+    headerName: 'Estreno',
+    flex: 1,
+  },
   { field: 'memberPrice', headerName: 'Precio socio', flex: 0.5 },
   { field: 'nonMemberPrice', headerName: 'Precio no socio', flex: 0.5 },
   {
@@ -162,6 +174,7 @@ const EventsPage: React.FC = () => {
             ...event,
             genreName: event.genre?.name ?? 'No definido',
             statusName: event.status?.name ?? 'No definido',
+            firstDate: formatDate(event.releaseDate),
             actions: (
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Tooltip title="Editar evento">
